@@ -1,6 +1,7 @@
 import os
 import re
 import time
+import pandas as pd
 
 # CHANGE THIS TO FOLDER WITH MEDIA FOLDERS
 main_path = 'I:\Media\Video\TV Shows'
@@ -307,6 +308,10 @@ def update_files(path):
                 os.rename(os.path.join(path, filename), os.path.join(path, dic[filename]))
             except:
                 pass
+
+        # Save dirty and clean names to CSV for later use in ML
+        df = pd.DataFrame([[key, dic[key]] for key in dic.keys()])
+        df.to_csv('samples.csv', mode='a', header=False)
 
         # Return a list of all files in path
         file_list = os.listdir(path)
