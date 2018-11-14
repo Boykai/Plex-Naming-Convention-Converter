@@ -6,42 +6,6 @@ import time
 main_path = 'I:\Media\Video\TV Shows'
 
 
-def get_saved_folders(dir):
-    """
-
-    :param dir:
-    :return:
-    """
-    with open(os.path.join(dir, 'skips.txt'), 'r') as f:
-        skip = f.readlines()
-    return [x.strip() for x in skip]
-
-
-def update_saved_folders(dir, folder):
-    """
-
-    :param dir:
-    :param folder:
-    :return:
-    """
-    with open(os.path.join(dir, 'skips.txt'), 'a') as f:
-        f.write(folder + '\n')
-
-
-def create_dict(files):
-    """
-
-    :param files:
-    :return:
-    """
-    dict = {}
-
-    for file in files:
-        dict.update({file: file})
-
-    return dict
-
-
 def remove_underscores(s):
     """
 
@@ -57,7 +21,7 @@ def remove_periods(s):
     :param s:
     :return:
     """
-    return (' ').join(s.split('.')[:-1]) + '.' + s.split('.')[-1]
+    return ' '.join(s.split('.')[:-1]) + '.' + s.split('.')[-1]
 
 
 def remove_brackets(s):
@@ -94,10 +58,10 @@ def change_num_to_season_episode(s):
     :param s:
     :return:
     """
-    return (' ').join(['s01e' + x if x.replace('.', '', 1).isdigit() else x for x in s.split(' ')])
+    return ' '.join(['s01e' + x if x.replace('.', '', 1).isdigit() else x for x in s.split(' ')])
 
 
-def remove_trailing_hypens(s):
+def remove_trailing_hyphens(s):
     """
 
     :param s:
@@ -107,7 +71,7 @@ def remove_trailing_hypens(s):
     try:
         if arr[0][-1] == '-':
             arr[0] = arr[0][:-1]
-            return ('.').join(arr)
+            return '.'.join(arr)
         else:
             return s
     except:
@@ -120,7 +84,7 @@ def remove_trailing_spaces(s):
     :param s:
     :return:
     """
-    return ('.').join([x.rstrip() for x in s.split('.')])
+    return '.'.join([x.rstrip() for x in s.split('.')])
 
 
 def remove_multi_spaces(s):
@@ -132,13 +96,13 @@ def remove_multi_spaces(s):
     return re.sub(r'\s+\s+', ' ', s).strip()
 
 
-def remove_hypens(s):
+def remove_hyphens(s):
     """
 
     :param s:
     :return:
     """
-    return (' - ').join([x.replace('-', ' ') for x in s.split(' - ')])
+    return ' - '.join([x.replace('-', ' ') for x in s.split(' - ')])
 
 
 def remove_quotes(s):
@@ -246,16 +210,91 @@ def capilze_letters(s):
     :param s:
     :return:
     """
-    return (' ').join([x.capitalize() if x[:2] != 's0' else x for x in s.split(' ')])
+    return ' '.join([x.capitalize() if x[:2] != 's0' else x for x in s.split(' ')])
 
 
-def update_files(dir):
+def get_saved_folders(path):
+    """
+
+    :param path:
+    :return:
+    """
+    with open(os.path.join(path, 'skips.txt'), 'r') as f:
+        skip = f.readlines()
+    return [x.strip() for x in skip]
+
+
+def update_saved_folders(path, folder):
+    """
+
+    :param path:
+    :param folder:
+    :return:
+    """
+    with open(os.path.join(path, 'skips.txt'), 'a') as f:
+        f.write(folder + '\n')
+
+
+def create_dict(files):
+    """
+
+    :param files:
+    :return:
+    """
+    dic = {}
+
+    for file in files:
+        dic.update({file: file})
+
+    return dic
+
+
+def preview_files(path):
     """
 
     :param dir:
     :return:
     """
-    dict = preview_files(dir)
+    # Return a list of all files in dir
+    file_list = os.listdir(path)
+
+    # Print list of files
+    print('Getting files in {} directory...\n'.format(dir))
+    for file in file_list:
+        print(file)
+
+    dic = create_dict(file_list)
+
+    for key in dic.keys():
+        dic[key] = remove_periods(dic[key])
+        dic[key] = remove_underscores(dic[key])
+        dic[key] = remove_brackets(dic[key])
+        dic[key] = remove_braces(dic[key])
+        dic[key] = remove_parens(dic[key])
+        dic[key] = remove_hypens(dic[key])
+        dic[key] = change_num_to_season_episode(dic[key])
+        dic[key] = remove_quotes(dic[key])
+        dic[key] = convert_x_season_ep(dic[key])
+        dic[key] = capilze_letters(dic[key])
+        dic[key] = format_episodes(dic[key])
+        dic[key] = remove_special_phrases(dic[key])
+        dic[key] = remove_multi_spaces(dic[key])
+        dic[key] = remove_trailing_spaces(dic[key])
+        dic[key] = remove_trailing_hypens(dic[key])
+        dic[key] = remove_trailing_spaces(dic[key])
+
+    [print('{} : {}'.format(key, dic[key])) for key in dic.keys()]
+
+    return dic
+
+
+def update_files(path):
+    """
+
+    :param path:
+    :return:
+    """
+    dic = preview_files(path)
 
     print('\nDo these conversions look good? (y/n): ')
     process = input()
@@ -263,14 +302,14 @@ def update_files(dir):
     if process == 'y':
         print('\nProcessing...')
 
-        for filename in os.listdir(dir):
+        for filename in os.listdir(path):
             try:
-                os.rename(os.path.join(dir, filename), os.path.join(dir, dict[filename]))
+                os.rename(os.path.join(path, filename), os.path.join(path, dic[filename]))
             except:
                 pass
 
-        # Return a list of all files in dir
-        file_list = os.listdir(dir)
+        # Return a list of all files in path
+        file_list = os.listdir(path)
 
         # Print list of files
         print('\nChecking files in {} directory...\n'.format(dir))
@@ -281,48 +320,11 @@ def update_files(dir):
     else:
         print('\nEnding Program...')
 
-def preview_files(dir):
+
+def update_preview_pass(path):
     """
 
-    :param dir:
-    :return:
-    """
-    # Return a list of all files in dir
-    file_list = os.listdir(dir)
-
-    # Print list of files
-    print('Getting files in {} directory...\n'.format(dir))
-    for file in file_list:
-        print(file)
-
-    dict = create_dict(file_list)
-
-    for key in dict.keys():
-        dict[key] = remove_periods(dict[key])
-        dict[key] = remove_underscores(dict[key])
-        dict[key] = remove_brackets(dict[key])
-        dict[key] = remove_braces(dict[key])
-        dict[key] = remove_parens(dict[key])
-        dict[key] = remove_hypens(dict[key])
-        dict[key] = change_num_to_season_episode(dict[key])
-        dict[key] = remove_quotes(dict[key])
-        dict[key] = convert_x_season_ep(dict[key])
-        dict[key] = capilze_letters(dict[key])
-        dict[key] = format_episodes(dict[key])
-        dict[key] = remove_special_phrases(dict[key])
-        dict[key] = remove_multi_spaces(dict[key])
-        dict[key] = remove_trailing_spaces(dict[key])
-        dict[key] = remove_trailing_hypens(dict[key])
-        dict[key] = remove_trailing_spaces(dict[key])
-
-    [print('{} : {}'.format(key, dict[key])) for key in dict.keys()]
-
-    return dict
-
-def update_preview_pass(dir):
-    """
-
-    :param dir:
+    :param path:
     :return:
     """
     print('\nWould you like to update {}? (y/n/p)'.format(folder))
@@ -333,7 +335,7 @@ def update_preview_pass(dir):
         update_saved_folders(main_path, folder)
     elif update == 'p':
         preview_files(os.path.join(main_path, folder))
-        update_preview_pass(dir)
+        update_preview_pass(path)
     else:
         update_saved_folders(main_path, folder)
         pass
@@ -342,7 +344,7 @@ def update_preview_pass(dir):
 if __name__ == '__main__':
     # Get media directory from user
     print('Please enter folder: (ex. C:\TV Shows)')
-    #main_path = str(input())
+    # main_path = str(input())
 
     # Get folders in media directory
     print('\nStarting at main path {}'.format(main_path))
