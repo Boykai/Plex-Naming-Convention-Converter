@@ -2,22 +2,38 @@ import os
 import re
 import time
 
-#CHANGE THIS TO FOLDER WITH MEDIA FOLDERS
+# CHANGE THIS TO FOLDER WITH MEDIA FOLDERS
 main_path = 'I:\Media\Video\TV Shows'
 
 
 def get_saved_folders(dir):
+    """
+
+    :param dir:
+    :return:
+    """
     with open(os.path.join(dir, 'skips.txt'), 'r') as f:
         skip = f.readlines()
     return [x.strip() for x in skip]
 
 
 def update_saved_folders(dir, folder):
+    """
+
+    :param dir:
+    :param folder:
+    :return:
+    """
     with open(os.path.join(dir, 'skips.txt'), 'a') as f:
         f.write(folder + '\n')
 
 
 def create_dict(files):
+    """
+
+    :param files:
+    :return:
+    """
     dict = {}
 
     for file in files:
@@ -27,31 +43,66 @@ def create_dict(files):
 
 
 def remove_underscores(s):
+    """
+
+    :param s:
+    :return:
+    """
     return s.replace('_', ' ')
 
 
 def remove_periods(s):
+    """
+
+    :param s:
+    :return:
+    """
     return (' ').join(s.split('.')[:-1]) + '.' + s.split('.')[-1]
 
 
 def remove_brackets(s):
+    """
+
+    :param s:
+    :return:
+    """
     return re.sub(r'\[.*?\]', '', s).strip()
 
 
 def remove_parens(s):
+    """
+
+    :param s:
+    :return:
+    """
     s2 = re.sub(r'\(.*?\)', '', s).strip()
     return s2.replace(')', '')
 
 
 def remove_braces(s):
+    """
+
+    :param s:
+    :return:
+    """
     return re.sub(r'\{.*?\}', '', s).strip()
 
 
 def change_num_to_season_episode(s):
+    """
+
+    :param s:
+    :return:
+    """
     return (' ').join(['s01e' + x if x.replace('.', '', 1).isdigit() else x for x in s.split(' ')])
 
 
 def remove_trailing_hypens(s):
+    """
+
+    :param s:
+    :return:
+    """
     arr = s.split('.')
     try:
         if arr[0][-1] == '-':
@@ -64,22 +115,47 @@ def remove_trailing_hypens(s):
 
 
 def remove_trailing_spaces(s):
+    """
+
+    :param s:
+    :return:
+    """
     return ('.').join([x.rstrip() for x in s.split('.')])
 
 
 def remove_multi_spaces(s):
+    """
+
+    :param s:
+    :return:
+    """
     return re.sub(r'\s+\s+', ' ', s).strip()
 
 
 def remove_hypens(s):
+    """
+
+    :param s:
+    :return:
+    """
     return (' - ').join([x.replace('-', ' ') for x in s.split(' - ')])
 
 
 def remove_quotes(s):
+    """
+
+    :param s:
+    :return:
+    """
     return s.replace("'", "")
 
 
 def remove_special_phrases(s):
+    """
+
+    :param s:
+    :return:
+    """
     special_phrases = ['480p',
                        '720p',
                        '1080p',
@@ -128,6 +204,11 @@ def remove_special_phrases(s):
 
 
 def convert_x_season_ep(s):
+    """
+
+    :param s:
+    :return:
+    """
     try:
         x = re.findall(r'[\d]+x[\d]+', s)[0]
         season_ep = 's0' + x.split('x')[0] + 'e' + x.split('x')[1]
@@ -138,6 +219,11 @@ def convert_x_season_ep(s):
 
 
 def format_episodes(s):
+    """
+
+    :param s:
+    :return:
+    """
     if re.findall(r'[^-]\s+s01\w+\s+[^-]', s):
         old = re.findall(r'\s+s01\w+\s+', s)[0]
         new = ' -' + old + '- '
@@ -155,10 +241,20 @@ def format_episodes(s):
 
 
 def capilze_letters(s):
+    """
+
+    :param s:
+    :return:
+    """
     return (' ').join([x.capitalize() if x[:2] != 's0' else x for x in s.split(' ')])
 
 
 def update_files(dir):
+    """
+
+    :param dir:
+    :return:
+    """
     dict = preview_files(dir)
 
     print('\nDo these conversions look good? (y/n): ')
@@ -186,6 +282,11 @@ def update_files(dir):
         print('\nEnding Program...')
 
 def preview_files(dir):
+    """
+
+    :param dir:
+    :return:
+    """
     # Return a list of all files in dir
     file_list = os.listdir(dir)
 
@@ -204,7 +305,6 @@ def preview_files(dir):
         dict[key] = remove_parens(dict[key])
         dict[key] = remove_hypens(dict[key])
         dict[key] = change_num_to_season_episode(dict[key])
-
         dict[key] = remove_quotes(dict[key])
         dict[key] = convert_x_season_ep(dict[key])
         dict[key] = capilze_letters(dict[key])
@@ -220,6 +320,11 @@ def preview_files(dir):
     return dict
 
 def update_preview_pass(dir):
+    """
+
+    :param dir:
+    :return:
+    """
     print('\nWould you like to update {}? (y/n/p)'.format(folder))
     update = str(input())
 
@@ -233,21 +338,28 @@ def update_preview_pass(dir):
         update_saved_folders(main_path, folder)
         pass
 
-# START
-print('Please enter folder: (ex. C:\TV Shows)')
-#main_path = str(input())
-print('\nStarting at main path {}'.format(main_path))
-folders = [x for x in os.listdir(main_path) if os.path.isdir(os.path.join(main_path, x))]
 
-print('\nHere is a list of all folders in {} folder...'.format(main_path))
-time.sleep(2)
-for folder in folders:
-    print(folder)
+if __name__ == '__main__':
+    # Get media directory from user
+    print('Please enter folder: (ex. C:\TV Shows)')
+    #main_path = str(input())
 
-skips = get_saved_folders(main_path)
+    # Get folders in media directory
+    print('\nStarting at main path {}'.format(main_path))
+    folders = [x for x in os.listdir(main_path) if os.path.isdir(os.path.join(main_path, x))]
 
-for folder in folders:
-    if folder not in skips:
-        update_preview_pass(folder)
-    else:
-        pass
+    # Display folders in media directory
+    print('\nHere is a list of all folders in {} folder...'.format(main_path))
+    time.sleep(2)
+    [print(folder) for folder in folders]
+
+    # Get previously skipped and stored folders
+    skips = get_saved_folders(main_path)
+
+    # Go through Update/Preview/No prompt for each folder in media directory
+    for folder in folders:
+        # If folder is in skips.txt, then the folder is skipped
+        if folder not in skips:
+            update_preview_pass(folder)
+        else:
+            pass
