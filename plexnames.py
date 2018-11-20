@@ -4,16 +4,9 @@ import time
 import pandas as pd
 
 # CHANGE THIS TO FOLDER WITH MEDIA FOLDERS
+global main_path, season
 main_path = 'I:\Media\Video\TV Shows'
-
-
-def remove_underscores(s):
-    """
-
-    :param s:
-    :return:
-    """
-    return s.replace('_', ' ')
+season = '1'
 
 
 def remove_periods(s):
@@ -25,6 +18,15 @@ def remove_periods(s):
     return ' '.join(s.split('.')[:-1]) + '.' + s.split('.')[-1]
 
 
+def remove_underscores(s):
+    """
+
+    :param s:
+    :return:
+    """
+    return s.replace('_', ' ')
+
+
 def remove_brackets(s):
     """
 
@@ -32,6 +34,15 @@ def remove_brackets(s):
     :return:
     """
     return re.sub(r'\[.*?\]', '', s).strip()
+
+
+def remove_braces(s):
+    """
+
+    :param s:
+    :return:
+    """
+    return re.sub(r'\{.*?\}', '', s).strip()
 
 
 def remove_parens(s):
@@ -44,13 +55,13 @@ def remove_parens(s):
     return s2.replace(')', '')
 
 
-def remove_braces(s):
+def remove_hyphens(s):
     """
 
     :param s:
     :return:
     """
-    return re.sub(r'\{.*?\}', '', s).strip()
+    return ' - '.join([x.replace('-', ' ') for x in s.split(' - ')])
 
 
 def change_num_to_season_episode(s):
@@ -59,7 +70,7 @@ def change_num_to_season_episode(s):
     :param s:
     :return:
     """
-    return ' '.join(['s01e' + x if x.replace('.', '', 1).isdigit() else x for x in s.split(' ')])
+    return ' '.join(['s0' + season + 'e' + x if x.replace('.', '', 1).isdigit() else x for x in s.split(' ')])
 
 
 def remove_trailing_hyphens(s):
@@ -97,15 +108,6 @@ def remove_multi_spaces(s):
     return re.sub(r'\s+\s+', ' ', s).strip()
 
 
-def remove_hyphens(s):
-    """
-
-    :param s:
-    :return:
-    """
-    return ' - '.join([x.replace('-', ' ') for x in s.split(' - ')])
-
-
 def remove_quotes(s):
     """
 
@@ -135,14 +137,19 @@ def remove_special_phrases(s):
                        'D1',
                        'Dd',
                        'Dd5',
+                       'Dvd',
                        'Dvdrip',
                        'Dvdrip.xvid',
+                       'Dubbed',
                        'Ep',
                        'Episode',
                        'Xvid',
                        'Ffndvd',
                        'X264',
+                       '0.x264',
                        'X265',
+                       '0.x265',
+                       'Dd2',
                        'Trollhd',
                        'B3 bomber',
                        'Rs2',
@@ -159,10 +166,12 @@ def remove_special_phrases(s):
                        'D3fil3r',
                        'Dhd',
                        'Ositv',
-                       'D3g']
+                       'D3g',
+                       'Ctrlhd',
+                       'Ffndvd']
 
     for phrase in special_phrases:
-        pattern = r'\s+' + re.escape(phrase) + r'\s+'
+        pattern = r'\s*' + re.escape(phrase) + r'\s*'
         s = re.sub(pattern, ' ', s).strip()
 
     return s
@@ -189,23 +198,23 @@ def format_episodes(s):
     :param s:
     :return:
     """
-    if re.findall(r'[^-]\s+s01\w+\s+[^-]', s):
-        old = re.findall(r'\s+s01\w+\s+', s)[0]
+    if re.findall(r'[^-]\s+s0\d+\w+\s+[^-]', s):
+        old = re.findall(r'\s+s0\d+\w+\s+', s)[0]
         new = ' -' + old + '- '
-        return re.sub(r'\s+s01\w+\s+', new, s).strip()
-    elif re.findall(r'[^-]\s+s01\w+\s+-', s):
-        old = re.findall(r'\s+s01\w+\s+', s)[0]
+        return re.sub(r'\s+s0\d+\w+\s+', new, s).strip()
+    elif re.findall(r'[^-]\s+s0\d+\w+\s+-', s):
+        old = re.findall(r'\s+s0\d+\w+\s+', s)[0]
         new = ' -' + old
-        return re.sub(r'\s+s01\w+\s+', new, s).strip()
-    elif re.findall(r'-\s+s01\w+\s+[^-]', s):
-        old = re.findall(r'\s+s01\w+\s+', s)[0]
+        return re.sub(r'\s+s0\d+\w+\s+', new, s).strip()
+    elif re.findall(r'-\s+s0\d+\w+\s+[^-]', s):
+        old = re.findall(r'\s+s0\d+\w+\s+', s)[0]
         new = old + '- '
-        return re.sub(r'\s+s01\w+\s+', new, s).strip()
+        return re.sub(r'\s+s0\d+\w+\s+', new, s).strip()
     else:
         return s
 
 
-def capilze_letters(s):
+def capitalize_letters(s):
     """
 
     :param s:
@@ -225,14 +234,15 @@ def get_saved_folders(path):
     return [x.strip() for x in skip]
 
 
-def update_saved_folders(path, folder):
+def update_saved_folders(folder):
     """
 
     :param path:
     :param folder:
     :return:
     """
-    with open(os.path.join(path, 'skips.txt'), 'a') as f:
+    global main_path
+    with open(os.path.join(main_path, 'skips.txt'), 'a') as f:
         f.write(folder + '\n')
 
 
@@ -253,14 +263,15 @@ def create_dict(files):
 def preview_files(path):
     """
 
-    :param dir:
+    :param path:
     :return:
     """
+    print(path)
     # Return a list of all files in dir
     file_list = os.listdir(path)
 
     # Print list of files
-    print('Getting files in {} directory...\n'.format(dir))
+    print('Getting files in {} directory...\n'.format(path))
     for file in file_list:
         print(file)
 
@@ -272,19 +283,21 @@ def preview_files(path):
         dic[key] = remove_brackets(dic[key])
         dic[key] = remove_braces(dic[key])
         dic[key] = remove_parens(dic[key])
-        dic[key] = remove_hypens(dic[key])
-        dic[key] = change_num_to_season_episode(dic[key])
+        dic[key] = remove_hyphens(dic[key])
         dic[key] = remove_quotes(dic[key])
-        dic[key] = convert_x_season_ep(dic[key])
-        dic[key] = capilze_letters(dic[key])
-        dic[key] = format_episodes(dic[key])
+        dic[key] = capitalize_letters(dic[key])
         dic[key] = remove_special_phrases(dic[key])
+        dic[key] = change_num_to_season_episode(dic[key])
+        dic[key] = convert_x_season_ep(dic[key])
+        dic[key] = format_episodes(dic[key])
         dic[key] = remove_multi_spaces(dic[key])
         dic[key] = remove_trailing_spaces(dic[key])
-        dic[key] = remove_trailing_hypens(dic[key])
+        dic[key] = remove_trailing_hyphens(dic[key])
         dic[key] = remove_trailing_spaces(dic[key])
 
-    [print('{} : {}'.format(key, dic[key])) for key in dic.keys()]
+    print('\n')
+    [print('{} : {:.>90}'.format(key, dic[key])) for key in dic.keys()]
+    print('\n')
 
     return dic
 
@@ -295,7 +308,13 @@ def update_files(path):
     :param path:
     :return:
     """
-    dic = preview_files(path)
+    print('What season is this? (Ex. 1):')
+    global season
+    season = input()
+
+    dic = preview_files(path + "\\")
+
+    [print(x) for x in dic.values()]
 
     print('\nDo these conversions look good? (y/n): ')
     process = input()
@@ -317,56 +336,76 @@ def update_files(path):
         file_list = os.listdir(path)
 
         # Print list of files
-        print('\nChecking files in {} directory...\n'.format(dir))
-
-        for file in file_list:
-            print(file)
-
+        print('\nChecking files in {} directory...\n'.format(path))
+        [print(x) for x in file_list]
     else:
         print('\nEnding Program...')
 
 
-def update_preview_pass(path):
+def update_preview_pass(path, folder):
     """
 
     :param path:
+    :param folder:
     :return:
     """
-    print('\nWould you like to update {}? (y/n/p)'.format(folder))
-    update = str(input())
 
-    if update == 'y':
-        update_files(os.path.join(main_path, folder))
-        update_saved_folders(main_path, folder)
-    elif update == 'p':
-        preview_files(os.path.join(main_path, folder))
-        update_preview_pass(path)
+    # Check for sub folders
+    directory, all_folders = core(path, folder)
+
+    for f in all_folders:
+        print('\nWould you like to update {}\{}? (y/n/p)'.format(directory, f))
+        update = str(input())
+
+        if update == 'y':
+            update_files(os.path.join(directory, f))
+            update_saved_folders(folder)
+        elif update == 'p':
+            preview_files(os.path.join(directory, f))
+            update_preview_pass(directory, f)
+        else:
+            update_saved_folders(folder)
+            pass
+
+
+def core(path, folder):
+    """
+
+    :param path:
+    :param folder:
+    :return:
+    """
+    directory = os.path.join(path, folder)
+    sub_folders = [x for x in os.listdir(directory) if os.path.isdir(os.path.join(directory, x))]
+
+    if not sub_folders:
+        return path, [folder]
     else:
-        update_saved_folders(main_path, folder)
-        pass
+        return directory, sub_folders
 
 
 if __name__ == '__main__':
     # Get media directory from user
     print('Please enter folder: (ex. C:\TV Shows)')
     # main_path = str(input())
-
+    directory = main_path
     # Get folders in media directory
-    print('\nStarting at main path {}'.format(main_path))
-    folders = [x for x in os.listdir(main_path) if os.path.isdir(os.path.join(main_path, x))]
+    print('\nStarting at main path {}'.format(directory))
+    folders = [x for x in os.listdir(directory) if os.path.isdir(os.path.join(directory, x))]
 
     # Display folders in media directory
-    print('\nHere is a list of all folders in {} folder...'.format(main_path))
+    print('\nHere is a list of all folders in {} folder...'.format(directory))
     time.sleep(2)
     [print(folder) for folder in folders]
 
     # Get previously skipped and stored folders
-    skips = get_saved_folders(main_path)
+    skips = get_saved_folders(directory)
 
     # Go through Update/Preview/No prompt for each folder in media directory
     for folder in folders:
         # If folder is in skips.txt, then the folder is skipped
         if folder not in skips:
-            update_preview_pass(folder)
+            update_preview_pass(directory, folder)
         else:
+            folders.remove(folder)
             pass
